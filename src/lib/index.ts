@@ -12,3 +12,4 @@ if (!qrData) {
 const untis = new WebUntisQR(qrData, '.403693', Authenticator, URL);
 await untis.login();
 export const loggedInUntis = untis;
+export const timeGrid = await untis.getTimegrid();

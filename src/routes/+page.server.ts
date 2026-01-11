@@ -1,6 +1,6 @@
 import { WebUntis, type WebAPITimetable } from "webuntis";
 import { fail } from "@sveltejs/kit";
-import { loggedInUntis as untis } from "$lib";
+import { timeGrid, loggedInUntis as untis } from "$lib";
 
 function lessonDate(lesson: WebAPITimetable) {
     const dateString = lesson.date.toString();
@@ -27,7 +27,9 @@ function lessonDate(lesson: WebAPITimetable) {
     }
 }
 
-// TODO export time grid
+export const load = async ({}) => {
+    return { timeGrid };
+}
 
 export const actions = {
     default: async ({ request }) => {
@@ -44,6 +46,11 @@ export const actions = {
                 lessonsByRoom[room.name] = await untis.getTimetableForWeek(new Date(), room.id, WebUntis.TYPES.ROOM);
             }
 
+            const blankLessonGrid = timeGrid[0].timeUnits.reduce((acc: {[startTime: number]: null[]}, val) => {
+                acc[val.startTime] = [];
+                for (let i = 0; i < 7; i++) acc[val.startTime].push(null);
+                return acc;
+            }, {});
             const lessons = Object.values(lessonsByRoom)
                 .flat(1)
                 .filter((l) => l.teachers.some((t) => t.element.name === teacherName))
@@ -51,10 +58,15 @@ export const actions = {
                     const time = lessonDate(l);
                     return {
                         room: l.rooms[0].element.name,
-                        startTime: time.start,
-                        endTime: time.end
+                        startTime: l.startTime,
+                        endTime: l.endTime,
+                        weekday: time.start.getDay()-1 // JS sets the start of the week to sunday but it's monday
                     }
-                });
+                })
+                .reduce((acc: {[startTime: number]: (string|null)[]}, val) => {
+                    acc[val.startTime][val.weekday] = val.room;
+                    return acc;
+                }, blankLessonGrid);
             return { timesAndRooms: lessons };
         } catch (e) {
             console.error(e);
