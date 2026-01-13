@@ -43,12 +43,12 @@ export const actions = {
                 fail(400, { errorMessage: "Teacher name was not provided." });
             }
 
-            const rooms = await untis.getRooms();
             let lessonsByRoom: {[x: string]: WebAPITimetable[]} = {};
 
             if (lessonsByRoomCache[currentWeek]) {
                 lessonsByRoom = lessonsByRoomCache[currentWeek];
             } else {
+                const rooms = await untis.getRooms();
                 for (const room of rooms) {
                     lessonsByRoom[room.name] = await untis.getTimetableForWeek(currentDate, room.id, WebUntis.TYPES.ROOM);
                 }
