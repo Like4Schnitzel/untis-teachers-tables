@@ -1,6 +1,7 @@
 import { WebUntis, type WebAPITimetable } from "webuntis";
 import { fail } from "@sveltejs/kit";
-import { timeGrid, loggedInUntis as untis } from "$lib";
+import { lessonsByRoomCache, timeGrid, loggedInUntis as untis } from "$lib";
+import { getWeekNumber } from "$lib/weekNo";
 
 function lessonDate(lesson: WebAPITimetable) {
     const dateString = lesson.date.toString();
@@ -34,16 +35,24 @@ export const load = async ({}) => {
 export const actions = {
     default: async ({ request }) => {
         try {
+            const currentDate = new Date();
+            const currentWeek = getWeekNumber(currentDate);
+            
             const teacherName = (await request.formData()).get("teacher-name");
             if (!teacherName) {
                 fail(400, { errorMessage: "Teacher name was not provided." });
             }
 
             const rooms = await untis.getRooms();
-            const lessonsByRoom: {[x: string]: WebAPITimetable[]} = {};
+            let lessonsByRoom: {[x: string]: WebAPITimetable[]} = {};
 
-            for (const room of rooms) {
-                lessonsByRoom[room.name] = await untis.getTimetableForWeek(new Date(), room.id, WebUntis.TYPES.ROOM);
+            if (lessonsByRoomCache[currentWeek]) {
+                lessonsByRoom = lessonsByRoomCache[currentWeek];
+            } else {
+                for (const room of rooms) {
+                    lessonsByRoom[room.name] = await untis.getTimetableForWeek(currentDate, room.id, WebUntis.TYPES.ROOM);
+                }
+                lessonsByRoomCache[currentWeek] = lessonsByRoom;
             }
 
             const blankLessonGrid = timeGrid[0].timeUnits.reduce((acc: {[startTime: number]: null[]}, val) => {

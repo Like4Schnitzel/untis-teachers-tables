@@ -1,4 +1,4 @@
-import { WebUntisQR } from "webuntis";
+import { WebUntisQR, type WebAPITimetable } from "webuntis";
 import { authenticator as Authenticator } from 'otplib';
 import { URL } from 'node:url';
 import { config } from "dotenv";
@@ -13,3 +13,4 @@ const untis = new WebUntisQR(qrData, '.403693', Authenticator, URL);
 await untis.login();
 export const loggedInUntis = untis;
 export const timeGrid = await untis.getTimegrid();
+export const lessonsByRoomCache: {[x: string]: WebAPITimetable[]}[] = [];
