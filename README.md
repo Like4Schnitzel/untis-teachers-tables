@@ -8,10 +8,10 @@ This gets the week's timetable for every room and then stitches those together s
 git clone https://github.com/Like4Schnitzel/untis-teachers-tables
 cd untis-teachers-tables
 npm i
-npm build
 # Your login QR code's data goes in here
 echo "UNTIS_QR=untis://..." > .env
-node build/index.js
+npm run build
+npm run preview
 ```
 
 Run the above and then connect to localhost:3000 in your browser of choice.
