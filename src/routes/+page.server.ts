@@ -35,6 +35,11 @@ export const load = async ({}) => {
 export const actions = {
     default: async ({ request }) => {
         try {
+            if (!await untis.validateSession()) {
+                await untis.logout().catch();
+                await untis.login();
+            }
+
             const currentDate = new Date();
             const currentWeek = getWeekNumber(currentDate);
             
